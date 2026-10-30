@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nursing Question Bank – Interactive Quiz</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f4f6fb;--c:#fff;--t:#1a2238;--m:#5d6785;--p:#1e3a8a;--ok:#16794a;--okb:#dff5e8;--no:#b42318;--nob:#fde4e1;--bd:#d5dbea}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--bg:#0f1424;--c:#182039;--t:#e8ecf8;--m:#9aa5c6;--p:#7aa2ff;--ok:#6fe0a3;--okb:#12382a;--no:#ff9b91;--nob:#4a1d1a;--bd:#2c3659}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--t);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:16px}
+h1{font-size:1.3rem;margin:.2em 0}
+.card{background:var(--c);border:1px solid var(--bd);border-radius:14px;padding:18px;margin:12px 0}
+.sub{color:var(--m);font-size:.9rem}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--bd);background:var(--c);color:var(--t);padding:10px 14px}
+button.pri{background:var(--p);color:#fff;border-color:var(--p)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) button.pri{color:#0f1424}}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;padding:12px}
+.opt.ok{background:var(--okb);border-color:var(--ok);color:var(--ok)}
+.opt.no{background:var(--nob);border-color:var(--no);color:var(--no)}
+.bar{height:6px;background:var(--bd);border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--p)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.sec{display:block;width:100%;text-align:left;margin:8px 0}
+.q{font-size:1.1rem;font-weight:600;margin:10px 0}
+.note{margin-top:10px;padding:10px;border-radius:10px;background:var(--bg)}
+label{display:block;margin:8px 0}
+</style></head><body><main id="app"></main>
+<script>
+// Format: section|number|question|optA~optB~...|answer index (0-based)
+const RAW=`
+M|1|Stage of anesthesia from initial administration up to loss of consciousness, with a dreamlike feeling:|Stage I~Stage II~Stage III~Stage IV|0
+M|2|Postoperative nursing care to maintain circulation includes:|Avoid early ambulation~Decrease fluid intake~Encourage early ambulation~Decrease food intake|2
+M|3|The first priority during early postoperative patient assessment is:|Respiratory assessment~Mobility~Psychological assessment~Drainage system|0
+M|4|A surgery which is done to repair physical deformity is:|Reconstructive~Curative~Transplantation~Palliative|0
+M|5|A surgery that must be performed within 24–48 hours is classified as:|Urgent~Emergency~Required~Elective|0
+M|6|Nursing care to maintain a patent airway includes:|Encourage bed exercise~Encourage leg exercise~Encourage abdominal exercise~Encourage deep breathing and coughing exercise|3
+M|7|Prevention of wound complications includes:|Use aseptic technique during dressing~Use good body mechanics~Teach the patient how to support the wound~All of the above|3
+M|8|The period that begins with admission to post-anesthesia care and ends with follow-up is:|Preoperative phase~Postoperative phase~Intraoperative phase~Perioperative phase|1
+M|9|The period from transferring the patient to the OR table until transfer to PACU is:|Intraoperative phase~Postoperative phase~Preoperative phase~Perioperative phase|0
+M|10|The period from the decision of surgical intervention until transferring the patient to the operating room table is:|Intraoperative phase~Postoperative phase~Preoperative phase~Perioperative phase|2
+M|11|Stage of anesthesia that starts from onset of irregular respiration to cessation of spontaneous breathing is:|Analgesia~Surgical anesthesia~Delirium~Danger|1
+M|12|A surgery which is done to preserve function of body parts or life of the patient:|Urgent~Emergency~Required~Elective|1
+M|13|Which stage of anesthesia occurs when too much anesthetic agent is given and ends with death:|Stage one~Stage two~Stage three~Stage four|3
+M|14|Causes of paralytic ileus include:|Trauma to the intestine~Reaction of anesthesia~Electrolyte imbalance especially potassium~All of the above|3
+M|15|Risk factors for wound dehiscence include:|Good body mechanics~Good nutrition~Wound complications as infections~Healthy young age person|2
+M|16|Prevention of wound complications include:|Correction of nutritional deficiencies~Use good body mechanics~Teach the patient how to support the wound~All of the above|3
+M|17|To prevent pulmonary complications the nurse teaches the patient:|Leg exercise~Abdominal exercise~Breathing and coughing exercise~Limit intake of fluid|2
+M|18|Prevention of thrombus formation includes:|Decrease intake of fluid after operation~Late ambulation post operatively~Bed rest for three days post operatively~Early ambulation and leg exercise|3
+M|21|Day surgery (ambulatory surgery) refers to patients who are:|Admitted for at least one week~Admitted and discharged on the same day~Always treated without anesthesia~Admitted only for emergencies|1
+M|22|Informed consent is best described as the patient's:|Automatic acceptance of the surgeon's decision~Autonomous decision based on condition, options, risks, and benefits~Permission given only by a family member~Verbal agreement after surgery|1
+M|23|Which surgery aims to relieve symptoms but does not cure the disease?|Curative~Palliative~Transplantation~Diagnostic|1
+M|24|Which is an example of transplantation surgery?|Appendectomy~Kidney replacement~Laparotomy for exploration~Cosmetic surgery|1
+M|25|Which statement about elective surgery is correct?|It always preserves life immediately~Satisfies patient desire and is not needed to preserve life or function~It must be performed within 24 hours~It is performed only to diagnose disease|1
+M|26|Which is listed as a routine preoperative investigation in the lecture?|Electrocardiogram (ECG)~Hearing test for all patients~Bone density scan for all patients~Visual acuity test for all patients|0
+M|27|Preoperative assessment of nutritional status may include:|BMI, serum protein, hemoglobin, and blood sugar~Only respiratory rate~Only urine color~Only pupil size|0
+M|28|Patients who smoke are urged to stop smoking:|One day before surgery~One week before surgery~Two months before surgery~Only after surgery|2
+M|29|The main goal of preoperative skin preparation is to:|Remove all body hair~Decrease bacteria without injuring the skin~Increase skin moisture~Delay the operation|1
+M|30|If hair must be removed before surgery, the lecture recommends:|A razor several days before~Electric clippers immediately before the operation~Chemical depilatory for every patient~No preparation under any circumstances|1
+M|31|Preoperative fasting aims primarily to reduce the risk of:|Constipation~Aspiration, regurgitation, and vomiting during anesthesia~Skin irritation~Urinary retention|1
+M|32|Which action is an immediate preoperative nursing intervention?|Encourage the patient to eat~Verify NPO status and check the consent signature~Remove the identification band~Avoid recording vital signs|1
+M|33|Written informed consent is necessary before surgery and should be:|Voluntary~Obtained only after anesthesia~Signed by the nurse instead of the patient in all cases~Optional for every invasive procedure|0
+M|34|Which is a goal of preanesthetic medication?|Increase postoperative nausea~Provide sedation and reduce anxiety~Cause fluid imbalance~Prevent all postoperative pain permanently|1
+M|35|Which team member belongs to the sterile operating-room team?|Circulating nurse~Anesthesiologist~Scrub person~Radiology technician|2
+M|36|Which is a role of the circulating nurse?|Maintain sterile field by passing instruments directly~Review patient's assessment and document procedures~Perform the surgeon's operation~Administer all anesthetics independently|1
+M|37|Which task is associated with the scrub nurse?|Arrange sterile instruments and count sponges, needles, instruments~Prepare discharge paperwork only~Obtain consent instead of the surgeon~Manage hospital billing record|0
+M|38|The primary goal of surgical positioning is to:|Limit access to the surgical site~Maintain patient safety while allowing access to the surgical site~Ensure patient cannot move after discharge~Avoid monitoring during surgery|1
+M|41|Regional anesthesia works by:|Blocking nerve supply to the surgical site~Inducing permanent unconsciousness~Increasing pain sensation~Stopping all cardiac activity|0
+M|42|General anesthesia is described as a:|Permanent state of unconsciousness~Reversible, pharmacologically induced state of unconsciousness~Local numbness without any medication~State in which no monitoring is needed|1
+M|43|During the first postoperative hour, vital signs are checked every:|5 minutes~15 minutes~45 minutes~2 hours|1
+M|44|Which item is included in early postoperative urinary assessment?|Urine output~Visual acuity~Hearing threshold~Hair growth|0
+M|45|Which sequence represents the progressive postoperative diet?|Regular, soft, full liquid, clear liquid~Clear liquid, full liquid, soft, regular~Soft, clear liquid, regular, full liquid~Full liquid, regular, clear liquid, soft|1
+M|46|Postoperative fever is defined as a temperature of:|At least 37 °C~At least 37.5 °C~At least 38 °C~At least 40 °C only|2
+M|47|Bright red blood from a wound most strongly suggests:|Older bleeding~Fresh bleeding~No bleeding~Urinary retention|1
+M|48|Which finding is consistent with hypovolemic shock?|Warm, dry skin and slow pulse~Pallor, falling blood pressure, weak rapid pulse, cool moist skin~Increased urine output and hypertension~Isolated itching|1
+M|49|Atelectasis is described as:|Alveolar collapse~Inflammation of a vein~Separation of wound edges~Absence of bladder emptying|0
+M|50|Which finding may occur with atelectasis?|Decreased breath sounds~Increased bowel sounds only~Bright red wound drainage~Increased urine output|0
+M|51|Thrombophlebitis refers to:|Thrombosis in an inflamed vein~Thrombosis in a healthy vein without inflammation~Infection of the bladder~Collapse of alveoli|0
+M|52|Phlebothrombosis refers to:|Thrombosis in an inflamed vein~Intravascular clotting without marked inflammation of the vein~A surgical wound infection~Paralysis of intestinal muscles|1
+M|53|A pulmonary embolism may present with:|Sudden shortness of breath and chest pain~Gradual hair loss~Increased appetite only~Painless urination|0
+M|54|Wound dehiscence means:|Protrusion of abdominal organs through the incision~Partial or complete separation of wound edges~A normal healing scar~Inflammation of the bladder|1
+M|55|Wound evisceration refers to:|Simple redness around the wound~Protrusion of abdominal viscera through the incision~A clot in a leg vein~Reduced bowel sounds only|1
+M|56|Which is a risk factor for wound dehiscence?|Adequate nutrition~Advanced age and malnutrition~Healthy wound closure~Correct body mechanics|1
+M|57|Paralytic ileus is characterized by:|Increased intestinal motility~Absent or decreased intestinal motility~Increased urine output~Inflammation of a vein|1
+M|58|Which electrolyte imbalance is specifically associated with paralytic ileus?|Hypokalemia (low potassium)~Hypercalcemia only~High sodium only~High chloride only|0
+M|59|Which intervention may be used for paralytic ileus? (original page cut off option C/D)|Oral food immediately regardless of bowel sounds~NPO, nasogastric suction, and IV fluids as indicated~Avoid fluid replacement|1
+M|60|A conservative nursing measure to help urinary retention is to: (original page cut off)|Maintain privacy and encourage urination~Restrict privacy|0
+M|62|Which nursing action is recommended when evisceration occurs?|Push organs back into the abdomen~Cover with sterile saline-moistened dressing & notify surgeon~Leave the wound uncovered~Encourage patient to walk|1
+M|63|Which intervention helps prevent postoperative respiratory complications?|Deep breathing, coughing, position changes, early ambulation~Prolonged immobility~Avoiding hydration in all cases~Keeping patient supine without assessment|0
+M|64|A surgical-site infection may present with:|Redness, swelling, tenderness, heat, and purulent drainage~Improved wound healing only~Decreased temperature in every case~Increased urine output only|0
+M|65|Which is a possible cause of intraoperative infection?|Breaks in sterile technique~Correct hand hygiene~Proper instrument sterilization~Appropriate environmental cleaning|0
+M|66|The circulating nurse is responsible for:|Recording running total of IV fluids administered~Performing all surgical incisions~Making patient sign consent after anesthesia~Removing all monitoring equipment before surgery|0
+M|67|Position recommended until a post-op patient can swallow oral secretions safely:|Side-lying~Standing~Trendelenburg in every case~Prone in every case|0
+M|68|Which intervention helps prevent postoperative constipation?|Fluids and activity within prescribed limits~Prolonged bed rest~Avoiding all oral fluids after permitted~Routine restriction of movement|0
+M|69|Which is a primary goal of postoperative nursing care?|Prevent complications and relieve pain~Prevent all patient movement~Avoid monitoring physiological status~Delay assessment until discharge|0
+T|1|One role of the scrub nurse is arranging sterile instruments in the manner prescribed for surgery.|True~False|0
+T|2|Palliative surgery is done to repair physical deformity.|True~False|1
+T|3|Reconstructive surgery is done to relieve pain or other disease symptoms.|True~False|1
+T|4|Malignant hyperthermia occurs as response to some anesthetic agents.|True~False|0
+T|5|Scrub nurse is considered from non sterile team.|True~False|1
+T|6|Circulating nurse is considered from sterile team.|True~False|1
+T|7|One role of circulating nurse is passing sterile instrument to the surgeon during surgery.|True~False|1
+T|8|Wound dehiscence occurs when the wound completely separates and organs protrude.|True~False|1
+T|9|Wound evisceration is the separation of wound edges without the protrusion of organs.|True~False|1
+T|10|Wound evisceration is the complete separation of wound with protrusion of organs.|True~False|0
+T|11|Paralytic ileus refers to the increase movement of the smooth muscles in the intestine.|True~False|1
+T|12|The immediate postoperative period covers the first 72 hours after surgery.|True~False|0
+T|13|Thrombophlebitis is a thrombosis in inflamed vein.|True~False|0
+T|14|Phlebothrombosis is a thrombosis in an inflamed vein.|True~False|1
+T|15|Reconstructive surgery is performed to repair a physical deformity or improve appearance.|True~False|0
+G|1|Which of the following is a major function of the gastrointestinal tract?|Producing red blood cells~Digesting food and absorbing nutrients~Filtering urine~Regulating body temperature|1
+G|2|Which movement propels food through the pharynx and esophagus?|Diffusion~Filtration~Peristalsis~Osmosis|2
+G|3|Approximately what proportion of digestion and nutrient absorption is handled by the small intestine?|10%~25%~50%~90%|3
+G|4|Which accessory organ produces bile to aid digestion?|Pancreas~Liver~Rectum~Esophagus|1
+G|5|Which is an example of a functional gastrointestinal disorder?|Colon polyp~Structural ulcer~Irritable bowel syndrome~Gallstone|2
+G|6|A peptic ulcer is best described as:|A hollowed-out area in mucosal wall of upper GI tract~Inflammation limited to appendix~Blockage in esophagus~Benign growth in rectum|0
+G|7|Which two factors are the primary causes of peptic ulcers?|Low-fiber diet and dehydration~H. pylori infection and NSAID use~Viral infection and anemia~High calcium and low potassium|1
+G|8|How do NSAIDs contribute to peptic ulcer formation?|Increase mucus production~Inhibit prostaglandin synthesis and weaken mucosal defense~Eradicate H. pylori~Neutralize stomach acid|1
+G|9|Which condition may cause severe gastric hyperacidity and increase ulcer risk?|Zollinger-Ellison syndrome~Ulcerative proctitis~Toxic megacolon~Anemia|0
+G|10|Patients with duodenal ulcer disease generally:|Secrete more acid than normal~Always secrete no gastric acid~Have inflammation only in rectum~Have no mucosal erosion|0
+G|11|What is the most common symptom of a peptic ulcer?|Sharp chest pain on inspiration~Dull or burning pain in upper middle abdomen~Pain confined to knee~Painless jaundice|1
+G|12|Which pain pattern is most consistent with a duodenal ulcer?|Food consistently worsens pain~Food or antacids temporarily relieve pain~Pain occurs only during defecation~Pain is never present on empty stomach|1
+G|13|Gastric ulcer pain commonly occurs:|30–60 minutes after eating~Only immediately before sleep~Only during exercise~2–3 days after meals|0
+G|14|Which finding may indicate bleeding from a peptic ulcer?|Clear urine~Black, tarry stools~Increased appetite~Slow hair growth|1
+G|15|Which test allows direct visual inspection of stomach and duodenum and can obtain biopsy?|Urea breath test~Stool antigen test~Upper GI endoscopy~Blood pressure measurement|2
+G|16|Which test detects active H. pylori using tagged carbon and breath breakdown products?|Urea breath test~Complete blood count only~Barium enema~Electrocardiogram|0
+G|17|What is a limitation of blood testing for H. pylori antibodies?|It cannot detect any previous exposure~It cannot distinguish active infection from past exposure~It directly visualizes ulcers~It measures stool blood only|1
+G|18|Which medication class suppresses gastric acid production to promote ulcer healing?|Proton pump inhibitors~Anticoagulants~Antihistamines for allergy~Diuretics|0
+G|19|Which medication may coat an ulcer and protect it from stomach acid?|Sucralfate~Insulin~Azathioprine~Potassium chloride|0
+G|20|A Graham patch repair is used to manage:|Ulcer perforation~Mild constipation~Anemia alone~Ulcerative proctitis|0
+G|21|During nursing assessment of a patient with a peptic ulcer, which observation suggests blood loss?|Rising hemoglobin~Low blood pressure or fast heart rate~Improved appetite~Normal-colored stool only|1
+G|22|Which lifestyle change can help peptic ulcer healing?|Continue smoking~Use NSAIDs more frequently~Stop smoking~Increase alcohol intake|2
+G|23|Ulcerative colitis primarily affects the:|Large intestine and colon lining~Kidneys~Lungs~Pancreas only|0
+G|24|The exact cause of ulcerative colitis is described as:|Always a bacterial infection~Unknown, likely involving immune, genetic, and environmental factors~Always caused by NSAIDs~Congenital absence of colon|1
+G|25|Which stool finding is characteristic of ulcerative colitis?|Bloody diarrhea with mucus or pus~White stool without other symptoms~Black stool in every case~No change in bowel habits|0
+G|26|Tenesmus refers to:|Persistent feeling of incomplete evacuation or urge to defecate~Difficulty breathing~Painful urination~Excessive thirst|0
+G|27|What is the gold-standard diagnostic approach for ulcerative colitis?|Colonoscopy or sigmoidoscopy with biopsy~Urea breath test~Chest X-ray~Urine culture|0
+G|28|Ulcerative proctitis is confined to the:|Entire colon~Rectum~Small intestine~Stomach|1
+G|29|Pancolitis affects:|Only the rectum~The rectum and sigmoid colon only~The entire colon~Only descending colon|2
+G|30|Which is a serious local complication of ulcerative colitis?|Toxic megacolon~Gallstones only~Gastric outlet obstruction~Esophageal varices|0
+G|31|Which medication group is first-line treatment for mild-to-moderate ulcerative colitis?|Aminosalicylates~Antacids~NSAIDs~Insulin|0
+G|32|Why are corticosteroids used in ulcerative colitis management?|For rapid, short-term control of moderate-to-severe flare-ups~To permanently cure all cases~To diagnose H. pylori~To increase intestinal bleeding|0
+G|33|Which surgical procedure removes colon and rectum and creates an internal pouch from small intestine?|J-pouch (IPAA)~Graham patch repair~Vagotomy alone~Gastrojejunostomy|0
+G|34|Which parameter should nurses monitor closely in active ulcerative colitis?|Stool frequency, consistency, blood, and mucus~Hair color~Visual acuity only~Hearing threshold|0
+G|35|During a severe ulcerative colitis flare-up, which nursing measure may be prescribed?|Keep patient NPO and provide IV fluids as needed~Encourage alcohol intake~Give NSAIDs routinely for pain~Stop all fluid monitoring|0
+G|36|Which diet is recommended for the post-acute phase of ulcerative colitis?|Low-fiber, high-protein, high-calorie diet~High-fiber diet only~Clear liquids permanently~High-fat, low-calorie diet|0`;
+const ALL=RAW.trim().split("\n").map(l=>{const[s,n,q,o,a]=l.split("|");return{s,n,q,o:o.split("~"),a:+a}});
+const SEC={M:"Perioperative MCQs",T:"Perioperative True / False",G:"GIT Disorders MCQs"};
+const L="ABCD";let st={};const $=document.getElementById("app");
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+function home(){
+$.innerHTML=`<h1>🩺 Nursing Question Bank</h1><p class="sub">${ALL.length} أسئلة · اختبار تفاعلي مع تصحيح فوري</p>
+<div class="card"><b>اختر القسم</b>${Object.keys(SEC).map(k=>`<button class="sec" onclick="start('${k}')">${SEC[k]} <span class="sub">(${ALL.filter(x=>x.s==k).length})</span></button>`).join("")}
+<button class="sec pri" onclick="start('all')">كل الأسئلة (${ALL.length})</button>
+<label><input type="checkbox" id="sh"> ترتيب عشوائي</label></div>
+<p class="sub">ملاحظة: ملف الـPDF لا يحتوي مفتاح إجابات للـMCQ (فقط T/F)، فالإجابات الصحيحة للـMCQ مستنتجة من المنهج وقد تحتاج مراجعة مع المدرّس.</p>`}
+function start(k){let qs=ALL.filter(x=>k=="all"||x.s==k);
+if(document.getElementById("sh").checked)qs=[...qs].sort(()=>Math.random()-.5);
+st={qs,i:0,sc:0,wrong:[],done:false};show()}
+function show(){const{qs,i}=st;if(i>=qs.length)return end();const q=qs[i];
+$.innerHTML=`<div class="sub">${SEC[q.s]} · Q${q.n} — ${i+1}/${qs.length} · ✔ ${st.sc}</div><div class="bar"><i style="width:${i/qs.length*100}%"></i></div>
+<div class="card"><div class="q">${esc(q.q)}</div>${q.o.map((o,j)=>`<button class="opt" onclick="pick(${j})">${q.s=="T"?"":L[j]+". "}${esc(o)}</button>`).join("")}<div id="fb"></div></div>
+<div class="row"><button onclick="home()">🏠 الرئيسية</button></div>`}
+function pick(j){const q=st.qs[st.i];if(st.done)return;st.done=true;
+document.querySelectorAll(".opt").forEach((b,k)=>{if(k==q.a)b.classList.add("ok");else if(k==j)b.classList.add("no");b.disabled=true});
+if(j==q.a)st.sc++;else st.wrong.push(q);
+document.getElementById("fb").innerHTML=`<div class="note">${j==q.a?"✅ إجابة صحيحة":"❌ خطأ — الصحيح: "+(q.s=="T"?"":L[q.a]+". ")+esc(q.o[q.a])}</div><div class="row"><button class="pri" onclick="nx()">${st.i+1==st.qs.length?"النتيجة":"التالي ←"}</button></div>`}
+function nx(){st.i++;st.done=false;show()}
+function end(){const n=st.qs.length,p=Math.round(st.sc/n*100);
+$.innerHTML=`<h1>النتيجة: ${st.sc}/${n} (${p}%)</h1><div class="bar"><i style="width:${p}%"></i></div>
+<div class="row"><button class="pri" onclick="again()">أعد الأسئلة الخاطئة (${st.wrong.length})</button><button onclick="home()">🏠 الرئيسية</button></div>
+${st.wrong.map(q=>`<div class="card"><div class="sub">Q${q.n}</div>${esc(q.q)}<div class="note">✔ ${esc(q.o[q.a])}</div></div>`).join("")}`}
+function again(){if(!st.wrong.length)return home();st={qs:st.wrong,i:0,sc:0,wrong:[],done:false};show()}
+home();
+</script></body></html>
